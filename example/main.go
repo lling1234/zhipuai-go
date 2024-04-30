@@ -1,14 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strings"
 	zhipuai "zhipuai-go"
 	"zhipuai-go/consts"
 	"zhipuai-go/httpclient"
-
-	"fmt"
 )
 
 func main() {
@@ -22,28 +22,33 @@ func main() {
 	apiKey := os.Getenv("API_KEY")
 	consts.ApiKey = apiKey
 
-	var msg string
+	// 循环以接收用户输入
+	for {
+		var input string
+		fmt.Print("请输入你的问题，或者按下回车键结束对话：")
+		fmt.Scanln(&input)
 
-	fmt.Scanln(&msg)
-
-	Msg := httpclient.Message{
-		Role:    "user",
-		Content: msg,
-	}
-
-	/*
-		//CogView 模型
-		zhipuai.Glmctrl(consts.CogView,Msg)
-		for line := range zhipuai.CogRespch {
-			fmt.Println(line.Data[0].Url)
+		// 如果用户没有输入任何内容，那么退出循环
+		if strings.TrimSpace(input) == "" {
+			break
 		}
-	*/
-	// Glm-4
-	zhipuai.Glmctrl(consts.GLM4, Msg)
 
-	for line := range zhipuai.GlmRespch {
-		fmt.Printf(line.Choices[0].Delta.Content)
+		// 创建消息结构体
+		msg := httpclient.Message{
+			Role:    "user",
+			Content: input,
+		}
+
+		// 调用Zhipuai模型处理用户的问题
+		zhipuai.Glmctrl(consts.GLM4, msg)
+
+		// 打印回答
+		for line := range zhipuai.GlmRespch {
+			fmt.Printf(line.Choices[0].Delta.Content)
+		}
+
+		// 输出回答后换行
+		fmt.Println()
 	}
-	fmt.Println()
 
 }
